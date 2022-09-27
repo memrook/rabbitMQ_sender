@@ -1,0 +1,26 @@
+{
+  "serverURL" : "amqp://guest:guest@localhost:5672/",
+  "queue" :
+  {
+    "queueName": "QTest",
+    "durable": false,
+    "autoDelete": false,
+    "exclusive": false,
+    "noWait": false
+  },
+  "consume" : {
+    "consumer" : "",
+    "autoAck" : true ,
+    "exclusive" : false,
+    "noLocal" : false,
+    "noWait" : false
+  },
+  "send" :
+  {
+    "retries" : 2,
+    "message" : "Hello World!",
+    "exchange" : "",
+    "mandatory" : false,
+    "immediate" : false
+  }
+}
