@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"io/ioutil"
 	"log"
@@ -67,16 +68,20 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), c.Send.Frequency*time.Second)
 	defer cancel()
 
-	body := c.Send.Message
-	err = ch.PublishWithContext(ctx,
-		c.Send.Exchange,  // exchange
-		q.Name,           // routing key
-		c.Send.Mandatory, // mandatory
-		c.Send.Immediate, // immediate
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
-		})
-	failOnError(err, "Failed to publish a message")
-	log.Printf(" [x] Sent %s\n", body)
+	//body := c.Send.Message
+	var inputMsg string
+	fmt.Println("Please enter the message:")
+	for fmt.Scan(&inputMsg); inputMsg != ""; fmt.Scan(&inputMsg) {
+		err = ch.PublishWithContext(ctx,
+			c.Send.Exchange,  // exchange
+			q.Name,           // routing key
+			c.Send.Mandatory, // mandatory
+			c.Send.Immediate, // immediate
+			amqp.Publishing{
+				ContentType: "text/plain",
+				Body:        []byte(inputMsg),
+			})
+		failOnError(err, "Failed to publish a message")
+		log.Printf(" [x] Sent %s\n", inputMsg)
+	}
 }
