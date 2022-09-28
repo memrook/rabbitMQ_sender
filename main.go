@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"io/ioutil"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -27,7 +27,8 @@ type Config struct {
 		NoWait    bool   `json:"noWait"`
 	} `json:"consume"`
 	Send struct {
-		Frequency time.Duration `json:"frequency"`
+		Retries   int           `json:"retries"`
+		Delay     time.Duration `json:"delay"`
 		Message   string        `json:"message"`
 		Exchange  string        `json:"exchange"`
 		Mandatory bool          `json:"mandatory"`
@@ -42,7 +43,7 @@ func failOnError(err error, msg string) {
 }
 
 func main() {
-	//Read configuration and put to var "c"
+	//Read JSON configuration and put to var "c"
 	file, _ := ioutil.ReadFile("config.json")
 	c := Config{}
 	_ = json.Unmarshal([]byte(file), &c)
@@ -65,13 +66,11 @@ func main() {
 	)
 	failOnError(err, "Failed to declare a queue")
 
-	ctx, cancel := context.WithTimeout(context.Background(), c.Send.Frequency*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), c.Send.Delay*time.Second)
 	defer cancel()
 
-	//body := c.Send.Message
-	var inputMsg string
-	fmt.Println("Please enter the message:")
-	for fmt.Scan(&inputMsg); inputMsg != ""; fmt.Scan(&inputMsg) {
+	for i := 1; i <= c.Send.Retries; i++ {
+		body := c.Send.Message + " #" + strconv.Itoa(i)
 		err = ch.PublishWithContext(ctx,
 			c.Send.Exchange,  // exchange
 			q.Name,           // routing key
@@ -79,9 +78,9 @@ func main() {
 			c.Send.Immediate, // immediate
 			amqp.Publishing{
 				ContentType: "text/plain",
-				Body:        []byte(inputMsg),
+				Body:        []byte(body),
 			})
 		failOnError(err, "Failed to publish a message")
-		log.Printf(" [x] Sent %s\n", inputMsg)
+		log.Printf(" [x] Sent %s\n", body)
 	}
 }
