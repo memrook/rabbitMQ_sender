@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"io/ioutil"
 	"log"
@@ -69,6 +70,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), c.Send.Delay*time.Second)
 	defer cancel()
 
+	t1 := time.Now()
+
 	for i := 1; i <= c.Send.Retries; i++ {
 		body := c.Send.Message + " #" + strconv.Itoa(i)
 		err = ch.PublishWithContext(ctx,
@@ -82,5 +85,10 @@ func main() {
 			})
 		failOnError(err, "Failed to publish a message")
 		log.Printf(" [x] Sent %s\n", body)
+		if c.Send.Retries == i {
+			fmt.Println("Start: ", t1.Format("15:01:05.000000"))
+			fmt.Println("End: ", time.Now().Format("15:01:05.000000"))
+			fmt.Println("Duration: ", time.Now().Sub(t1))
+		}
 	}
 }
