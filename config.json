@@ -17,7 +17,8 @@
   },
   "send" :
   {
-    "retries" : 2,
+    "retries" : 100000,
+    "delay" : 0,
     "message" : "Hello World!",
     "exchange" : "",
     "mandatory" : false,
